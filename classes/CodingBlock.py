@@ -16,7 +16,8 @@ class Block:
         self.defineType(bType)
 
         self.isFocused = False
-        self.attached = None
+        self.attachedTop = None
+        self.attachedBottom = None
 
         global blockID
         self.id = blockID
@@ -41,7 +42,7 @@ class Block:
         else:
             self.color = "#696969"
             self.cost = 0
-            self.message = "None"
+            self.message = "Unknown"
 
     def display(self, canvas: Canvas):
         """draws code block on the canvas
@@ -63,7 +64,7 @@ class Block:
         Args:
             posX (int): the x center
         """
-        self.setExactX(posX - self.width/2)
+        self.setCornerX(posX - self.width/2)
 
     def setY(self, posY: int):
         """set the center Y position of the block
@@ -71,34 +72,50 @@ class Block:
         Args:
             posX (int): the y center
         """
-        self.setExactY(posY - self.height/2)
+        self.setCornerY(posY - self.height/2)
 
-    def setExactX(self, posX: int):
+    def getX(self):
+        """get center X position of the block
+
+        Returns:
+            int: the x center
+        """
+        return self.x + self.width/2
+
+    def getY(self):
+        """get center Y position of the block
+
+        Returns:
+            int: the y center
+        """
+        return self.y + self.height/2
+
+    def setCornerX(self, posX: int):
         self.x = posX
-        if self.attached:
-            self.attached.setExactX(self.x)
+        if self.attachedBottom:
+            self.attachedBottom.setCornerX(self.x)
 
-    def setExactY(self, posY: int):
+    def setCornerY(self, posY: int):
         self.y = posY
-        if self.attached:
-            self.attached.setExactY(self.y + self.height)
+        if self.attachedBottom:
+            self.attachedBottom.setCornerY(self.y + self.height)
 
     def moove(self, posX: int, posY: int, blockList: list):
         self.setX(posX)
         self.setY(posY)
         for b in blockList:
 
-            if b.attached and b.attached.id == self.id:
-                b.attached = None
+            if self.attachedTop and self.attachedTop.id == b.id and not self.isNearUnder(self.attachedTop):
+                b.disatach(self)
 
-            if b.id != self.id and self.isNear(b):
+            elif b.id != self.id and self.isNearUnder(b):
                 b.attach(self)
 
     def contains(self, x: int, y: int):
         return x > self.x and x < self.x + self.width \
             and y > self.y and y < self.y + self.height
 
-    def isNear(self, block):
+    def isNearUnder(self, block):
         """Check if we are near a block we can attach to
 
         Args:
@@ -111,13 +128,66 @@ class Block:
             and abs(block.x + block.width/2 - self.x - self.width/2) < self.width/2
 
     def attach(self, b):
-        b.setExactX(self.x)
-        b.setExactY(self.y + self.height)
-        if self.attached:
-            b.attach(self.attached)
-        self.attached = b
+        b.setCornerX(self.x)
+        b.setCornerY(self.y + self.height)
+
+        if self.attachedBottom and self.attachedBottom.id != b.id:
+            a = self.attachedBottom
+            self.attachedBottom = b
+
+            b.attachedTop = self
+            b.attach(a)
+        else:
+            self.attachedBottom = b
+            b.attachedTop = self
+
+    def disatach(self, b):
+        b.attachedTop = None
+        self.attachedBottom = None
+
+    def __str__(self) -> str:
+        if self.attachedTop:
+            at = self.attachedTop.message
+        else:
+            at = "N"
+        if self.attachedBottom:
+            ab = self.attachedBottom.message
+        else:
+            ab = "N"
+        return f"{self.message} block, x: {self.x}, y: {self.y}, width: {self.width}, height: {self.height}, isFocused: {self.isFocused}, attachedTop: {at}, attachedBottom: {ab}"
 
 
 if __name__ == "__main__":
     # test zone
-    pass
+    b1 = Block(100, 100, 100, 50, "fire_ball")
+    b2 = Block(0, 0, 100, 50, "checker")
+    blockList = [b1, b2]
+    b2.moove(1000, 500, blockList)
+    assert b2.getX() == 1000, "movement X not working"
+    assert b2.getY() == 500, "movement Y not working"
+
+    b2.moove(130, 170, blockList)
+    assert b2.attachedTop == b1, "top attaching not working"
+    assert b1.attachedBottom == b2, "bottom attaching not working"
+    assert b2.getX() == b1.getX(), "clipping X not working"
+    assert b2.getY() == b1.getY() + b1.height, "clipping Y not working"
+
+    b1.moove(500, 500, blockList)
+    assert b2.getX() == 500, "stack x movement not working"
+    assert b2.getY() == 550, "stack y movement not working"
+
+    b3 = Block(0, 0, 100, 50, "ice_ahnilator")
+    blockList.append(b3)
+    b4 = Block(0, 0, 100, 50, "unknown")
+    blockList.append(b4)
+
+    b3.moove(500, 610, blockList)
+    b4.moove(500, 550, blockList)
+    assert b2.attachedTop == b4, "top insertion not working"
+    assert b1.attachedBottom == b4, "bottom insertion not working"
+
+    assert b3.attachedTop == b2, "top insertion chain 3rd block not working"
+    assert b2.attachedBottom == b3, "bottom insertion chain 2cond block not working"
+
+    assert b2.getY() == 600, "insertion 1st y shift not working"
+    assert b3.getY() == 650, "insertion 2cond shift not working"

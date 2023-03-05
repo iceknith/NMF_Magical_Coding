@@ -49,6 +49,8 @@ def gameLoop():
 
 def update():
     for b in blocks:
+        if b.message == "Unknown":
+            print(b.attachedBottom, b.attachedTop)
         if b.isFocused:
             b.moove(mouseX, mouseY, blocks)
 
@@ -101,8 +103,8 @@ if __name__ == "__main__":
     root.title("Magical System Programming")
 
     # adjust window size to screen size
-    screen_width = root.winfo_screenwidth()
-    screen_height = root.winfo_screenheight()
+    screen_width = 1250  # root.winfo_screenwidth()
+    screen_height = 750  # root.winfo_screenheight()
     root.geometry(f"{screen_width}x{screen_height}")
 
     # root bindings
@@ -125,7 +127,7 @@ if __name__ == "__main__":
     mouseX, mouseY = 0, 0
 
     # initialise block list
-    blocks = [cb.Block(200, 490, 200, 50, "fire_ball"),
+    """blocks = [cb.Block(200, 490, 200, 50, "fire_ball"),
               cb.Block(300, 48, 200, 50, "fire_ball"),
               cb.Block(400, 500, 200, 50, "checker"),
               cb.Block(500, 200, 200, 50, "checker"),
@@ -134,7 +136,12 @@ if __name__ == "__main__":
               cb.Block(400, 1000, 200, 50, "ice_ahnilator"),
               cb.Block(1200, 70, 200, 50, "sledkhjgb"),
               cb.Block(300, 489, 200, 50, "sledkhjgb"),
-              cb.Block(700, 73, 200, 50, "sledkhjgb")]
+              cb.Block(700, 73, 200, 50, "sledkhjgb")]"""
+
+    blocks = [cb.Block(200, 490, 200, 50, "fire_ball"),
+              cb.Block(700, 500, 200, 50, "ice_ahnilator"),
+              cb.Block(1200, 70, 200, 50, "sledkhjgb"),
+              cb.Block(500, 200, 200, 50, "checker")]
 
     # game loop call
     gameLoop()
