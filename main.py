@@ -14,7 +14,7 @@ def gameLoop():
     previousTime = time()
 
     # fps variables definition
-    currentFPS = 0
+    global currentFPS
     dynamicFPS = 0
     fpsTimer = 0
 
@@ -53,8 +53,13 @@ def update():
 
 
 def repaint():
+    # reset
     canvas.delete("all")
-    b.display(canvas)
+
+    # draw everything
+    b.display(canvas)  # temporary
+    canvas.create_text(
+        50, 10, text=f"fps : {currentFPS} / {fps}", font=("Arial", 10, "bold"))
     root.update()
 
 
@@ -96,6 +101,7 @@ if (__name__ == "__main__"):
     # game loop global definitions
     doGameContinue = True
     fps = 60
+    currentFPS = 0
 
     # mouse definitions
     mouseX, mouseY = 0, 0
