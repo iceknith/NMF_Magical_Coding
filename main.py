@@ -32,7 +32,7 @@ def gameLoop():
             dynamicFPS += 1
             fpsTimer += deltaTime
 
-            if fpsTimer >= 1:
+            if fpsTimer > 1:
                 currentFPS = dynamicFPS
                 dynamicFPS = 0
                 fpsTimer = 0
@@ -48,8 +48,9 @@ def gameLoop():
 
 
 def update():
-    b.setX(mouseX)
-    b.setY(mouseY)
+    for b in blocks:
+        if b.isFocused:
+            b.moove(mouseX, mouseY, blocks)
 
 
 def repaint():
@@ -57,7 +58,9 @@ def repaint():
     canvas.delete("all")
 
     # draw everything
-    b.display(canvas)  # temporary
+    for b in blocks:
+        b.display(canvas)
+
     canvas.create_text(
         50, 10, text=f"fps : {currentFPS} / {fps}", font=("Arial", 10, "bold"))
     root.update()
@@ -78,7 +81,20 @@ def mouseMovement(event):
     mouseX, mouseY = event.x, event.y
 
 
-if (__name__ == "__main__"):
+def mouseLeftClick(event):
+    for b in blocks:
+        if b.contains(mouseX, mouseY):
+            b.isFocused = True
+            return
+
+
+def mouseLeftRelease(event):
+    for b in blocks:
+        if b.isFocused:
+            b.isFocused = False
+
+
+if __name__ == "__main__":
 
     # window definition
     root = Tk()
@@ -92,6 +108,8 @@ if (__name__ == "__main__"):
     # root bindings
     root.protocol("WM_DELETE_WINDOW", closeWindow)
     root.bind("<Motion>", mouseMovement)
+    root.bind("<ButtonPress-1>", mouseLeftClick)
+    root.bind("<ButtonRelease-1>", mouseLeftRelease)
 
     # frame + canvas definition
     frame = Frame(root)
@@ -106,8 +124,17 @@ if (__name__ == "__main__"):
     # mouse definitions
     mouseX, mouseY = 0, 0
 
-    # temporary
-    b = cb.Block(screen_width/2, screen_height/2, 100, 100)
+    # initialise block list
+    blocks = [cb.Block(200, 490, 200, 50, "fire_ball"),
+              cb.Block(300, 48, 200, 50, "fire_ball"),
+              cb.Block(400, 500, 200, 50, "checker"),
+              cb.Block(500, 200, 200, 50, "checker"),
+              cb.Block(700, 500, 200, 50, "ice_ahnilator"),
+              cb.Block(150, 126, 200, 50, "ice_ahnilator"),
+              cb.Block(400, 1000, 200, 50, "ice_ahnilator"),
+              cb.Block(1200, 70, 200, 50, "sledkhjgb"),
+              cb.Block(300, 489, 200, 50, "sledkhjgb"),
+              cb.Block(700, 73, 200, 50, "sledkhjgb")]
 
     # game loop call
     gameLoop()
