@@ -10,7 +10,7 @@ def gameLoop():
     returns : None
     """
     # game loop private definitions
-    waitingTime = 1/fps
+    waitingTime = 1 / fps
     previousTime = time()
 
     # fps variables definition
@@ -37,7 +37,7 @@ def gameLoop():
                 dynamicFPS = 0
                 fpsTimer = 0
 
-                if currentFPS <= fps/2:
+                if currentFPS <= fps / 2:
                     print("ALERT !!! fps too low")
 
             # update game
@@ -64,7 +64,8 @@ def repaint():
         b.display(canvas)
 
     canvas.create_text(
-        50, 10, text=f"fps : {currentFPS} / {fps}", font=("Arial", 10, "bold"))
+        50, 10, text=f"fps : {currentFPS} / {fps}", font=("Arial", 10, "bold")
+    )
     root.update()
 
 
@@ -138,10 +139,13 @@ if __name__ == "__main__":
               cb.Block(300, 489, 200, 50, "sledkhjgb"),
               cb.Block(700, 73, 200, 50, "sledkhjgb")]"""
 
-    blocks = [cb.Block(200, 490, 200, 50, "fire_ball"),
-              cb.Block(700, 500, 200, 50, "ice_ahnilator"),
-              cb.Block(1200, 70, 200, 50, "sledkhjgb"),
-              cb.Block(500, 200, 200, 50, "checker")]
+    blocks = [
+        cb.Block(200, 490, 200, 50, "fire_ball"),
+        cb.Block(700, 500, 200, 50, "ice_ahnilator"),
+        cb.Block(1200, 70, 200, 50, "sledkhjgb"),
+        cb.Block(500, 200, 200, 50, "checker"),
+    ]
 
     # game loop call
-    gameLoop()
+    gameLoop()  # val a été ici
+    print("hehe")
