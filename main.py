@@ -148,3 +148,4 @@ if __name__ == "__main__":
 
     # game loop call
     gameLoop()
+    print("lucas est ici")
