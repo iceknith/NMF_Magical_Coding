@@ -147,5 +147,4 @@ if __name__ == "__main__":
     ]
 
     # game loop call
-    gameLoop()  # val a été ici
-    print("hehe")
+    gameLoop()
