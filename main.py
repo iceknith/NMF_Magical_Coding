@@ -2,6 +2,8 @@ from tkinter import *
 from tkinter import messagebox
 from time import time
 import classes.CodingBlock as cb
+from classes.Keyboard_Handler import Keyboard
+from classes.Mouse_Handler import Mouse
 
 
 def gameLoop():
@@ -49,10 +51,15 @@ def gameLoop():
 
 def update():
     for b in blocks:
-        if b.message == "Unknown":
-            print(b.attachedBottom, b.attachedTop)
+        # focuses the blocks
+        if mouse.isRightClick and (b.isFocused or b.contains(mouse.x, mouse.y)):
+            b.isFocused = True
+        else:
+            b.isFocused = False
+
+        # moves the blocks
         if b.isFocused:
-            b.moove(mouseX, mouseY, blocks)
+            b.moove(mouse.x, mouse.y, blocks)
 
 
 def repaint():
@@ -79,24 +86,6 @@ def closeWindow():
         root.destroy()
 
 
-def mouseMovement(event):
-    global mouseX, mouseY
-    mouseX, mouseY = event.x, event.y
-
-
-def mouseLeftClick(event):
-    for b in blocks:
-        if b.contains(mouseX, mouseY):
-            b.isFocused = True
-            return
-
-
-def mouseLeftRelease(event):
-    for b in blocks:
-        if b.isFocused:
-            b.isFocused = False
-
-
 if __name__ == "__main__":
 
     # window definition
@@ -110,9 +99,8 @@ if __name__ == "__main__":
 
     # root bindings
     root.protocol("WM_DELETE_WINDOW", closeWindow)
-    root.bind("<Motion>", mouseMovement)
-    root.bind("<ButtonPress-1>", mouseLeftClick)
-    root.bind("<ButtonRelease-1>", mouseLeftRelease)
+    keyboard = Keyboard(root)
+    mouse = Mouse(root)
 
     # frame + canvas definition
     frame = Frame(root)
@@ -123,9 +111,6 @@ if __name__ == "__main__":
     doGameContinue = True
     fps = 60
     currentFPS = 0
-
-    # mouse definitions
-    mouseX, mouseY = 0, 0
 
     # initialise block list
     """blocks = [cb.Block(200, 490, 200, 50, "fire_ball"),
