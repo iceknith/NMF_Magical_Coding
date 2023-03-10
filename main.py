@@ -4,6 +4,7 @@ from time import time
 import classes.CodingBlock as cb
 from classes.Keyboard_Handler import Keyboard
 from classes.Mouse_Handler import Mouse
+from classes.Scene import Scene
 
 
 def gameLoop():
@@ -50,16 +51,28 @@ def gameLoop():
 
 
 def update():
-    for b in blocks:
-        # focuses the blocks
-        if mouse.isRightClick and (b.isFocused or b.contains(mouse.x, mouse.y)):
-            b.isFocused = True
-        else:
-            b.isFocused = False
+    #---block logic---#
 
-        # moves the blocks
-        if b.isFocused:
-            b.moove(mouse.x, mouse.y, blocks)
+    # block focusing logic
+    if mouse.isRightClick and gameScene.focusedBlock == None:
+
+        # pass trough every block to see which one sould be focused
+        for b in gameScene.displayedBlocks:
+            if b.contains(mouse.x, mouse.y):
+                gameScene.focusedBlock = b
+                b.isFocused = True
+
+    # if no click
+    elif not mouse.isRightClick and gameScene.focusedBlock:
+
+        # unfocus block
+        gameScene.focusedBlock.isFocused = False
+        gameScene.focusedBlock = None
+
+    # moves the blocks
+    if gameScene.focusedBlock:
+        gameScene.focusedBlock.moove(
+            mouse.x, mouse.y, gameScene.displayedBlocks)
 
 
 def repaint():
@@ -67,7 +80,7 @@ def repaint():
     canvas.delete("all")
 
     # draw everything
-    for b in blocks:
+    for b in gameScene.displayedObjects:
         b.display(canvas)
 
     canvas.create_text(
@@ -112,24 +125,8 @@ if __name__ == "__main__":
     fps = 60
     currentFPS = 0
 
-    # initialise block list
-    """blocks = [cb.Block(200, 490, 200, 50, "fire_ball"),
-              cb.Block(300, 48, 200, 50, "fire_ball"),
-              cb.Block(400, 500, 200, 50, "checker"),
-              cb.Block(500, 200, 200, 50, "checker"),
-              cb.Block(700, 500, 200, 50, "ice_ahnilator"),
-              cb.Block(150, 126, 200, 50, "ice_ahnilator"),
-              cb.Block(400, 1000, 200, 50, "ice_ahnilator"),
-              cb.Block(1200, 70, 200, 50, "sledkhjgb"),
-              cb.Block(300, 489, 200, 50, "sledkhjgb"),
-              cb.Block(700, 73, 200, 50, "sledkhjgb")]"""
-
-    blocks = [
-        cb.Block(200, 490, 200, 50, "fire_ball"),
-        cb.Block(700, 500, 200, 50, "ice_ahnilator"),
-        cb.Block(1200, 70, 200, 50, "sledkhjgb"),
-        cb.Block(500, 200, 200, 50, "checker"),
-    ]
+    # initialise scene
+    gameScene = Scene("test")
 
     # game loop call
     gameLoop()
