@@ -1,14 +1,14 @@
 from PIL import Image, ImageTk
 from tkinter import Canvas, NW
-"""if __name__ == "__main__":
-    from Scene import Scene
-elif __name__[:8] == "classes.":
-    from classes.Scene import Scene"""
+if __name__ == "__main__":
+    from CodingBlock import Block
+if __name__ == "classes.Buttons":
+    from classes.CodingBlock import Block
 
 
 class Button:
 
-    def __init__(self, x: int, y: int, width: int, height: int, message: str, buttonType: str) -> None:
+    def __init__(self, x: int, y: int, width: int, height: int, message: str, buttonType: tuple) -> None:
         # variables defnition
         self.x = x
         self.y = y
@@ -18,7 +18,7 @@ class Button:
         self.isFocused = False
         self.isClicked = False
 
-        self.font = ("Arial", 20, "normal")
+        self.font = ("Arial", 15, "normal")
         self.message = message
 
         self.typeAssignement(buttonType)
@@ -31,13 +31,24 @@ class Button:
             buttonType (str): the type of the button
         """
 
-        # pickng images
-        if buttonType == "level transition":
+        # defining images and behaviour according to button type
+        if buttonType[0] == "level transition":
             self.type = "level_transition"
+            self.level = buttonType[1]
+
             self.clickedImage = Image.open("assets/buttons/baseClicked.png")
             self.focusedImage = Image.open("assets/buttons/baseFocused.png")
             self.unfocusedImage = Image.open(
                 "assets/buttons/baseUnfocused.png")
+
+        elif buttonType[0] == "block creation":
+            self.type = "block_creation"
+            self.blockType = buttonType[1]
+
+            self.clickedImage = Image.open("assets/blocks/normalBlockRed.png")
+            self.focusedImage = Image.open("assets/blocks/normalBlockRed.png")
+            self.unfocusedImage = Image.open(
+                "assets/blocks/normalBlockRed.png")
 
         # resizing images
         self.clickedImage = self.clickedImage.resize(
@@ -97,4 +108,9 @@ class Button:
         self.image = self.focusedImage
 
         if self.type == "level_transition":
-            scene.loadLevel("editor")
+            scene.loadLevel(self.level)
+
+        elif self.type == "block_creation":
+            bt = self.blockType
+            # changes to do: block should spawn focused and on top of the player's cursor
+            scene.add_Object(Block(bt[0], bt[1], bt[2], bt[3], bt[4]))

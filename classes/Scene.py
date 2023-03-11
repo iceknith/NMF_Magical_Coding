@@ -1,6 +1,9 @@
 if __name__ == "__main__":
     from CodingBlock import Block
     from Buttons import Button
+if __name__ == "classes.Scene":
+    from classes.CodingBlock import Block
+    from classes.Buttons import Button
 
 
 def levels():
@@ -9,7 +12,11 @@ def levels():
                   Block(700, 500, 200, 50, "ice_ahnilator"),
                   Block(1200, 70, 200, 50, "sledkhjgb"),
                   Block(500, 200, 200, 50, "checker"),
-                  Button(100, 100, 100, 50, "hello", "level transition")],
+                  Button(100, 100, 200, 50, "Change Level",
+                         ("level transition", "editor")),
+                  Button(1000, 250, 100, 50, "New Block",
+                         ("block creation", (200, 490, 200, 50, "fire_ball")))
+                  ],
 
          "editor": [Block(200, 490, 200, 50, "fire_ball"),
                     Block(300, 48, 200, 50, "fire_ball"),
@@ -61,3 +68,16 @@ class Scene:
                     self.displayedBlocks.append(obj)
                 elif type(obj) == Button:
                     self.displayedButtons.append(obj)
+
+    def add_Object(self, obj) -> None:
+        """adds an object to the current scene
+
+        Args:
+            obj (Button/Block): the object to add
+        """
+        self.displayedObjects.append(obj)
+
+        if type(obj) == Block:
+            self.displayedBlocks.append(obj)
+        elif type(obj) == Button:
+            self.displayedButtons.append(obj)
