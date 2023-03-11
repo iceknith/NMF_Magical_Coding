@@ -54,7 +54,7 @@ def update():
     #---block logic---#
 
     # block focusing logic
-    if mouse.isRightClick and gameScene.focusedBlock == None:
+    if mouse.isLeftClick and gameScene.focusedBlock == None:
 
         # pass trough every block to see which one sould be focused
         for b in gameScene.displayedBlocks:
@@ -63,7 +63,7 @@ def update():
                 b.isFocused = True
 
     # if no click
-    elif not mouse.isRightClick and gameScene.focusedBlock:
+    elif not mouse.isLeftClick and gameScene.focusedBlock:
 
         # unfocus block
         gameScene.focusedBlock.isFocused = False
@@ -73,6 +73,23 @@ def update():
     if gameScene.focusedBlock:
         gameScene.focusedBlock.moove(
             mouse.x, mouse.y, gameScene.displayedBlocks)
+
+    #---button logic---#
+
+    # button focussing and pressing logic
+    for b in gameScene.displayedButtons:
+
+        if b.contains(mouse.x, mouse.y):
+            # focus block
+            b.focus_Handler(mouse.isLeftClick)
+
+            # click bock
+            if b.isClicked and not mouse.isLeftClick:
+                b.click_Handler(gameScene)
+
+        elif b.isFocused:
+            # unfocus block
+            b.unfocus_Handler()
 
 
 def repaint():
