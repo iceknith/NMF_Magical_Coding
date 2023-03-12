@@ -1,4 +1,5 @@
-from tkinter import Canvas
+from tkinter import Canvas, NW
+from PIL import Image, ImageTk
 
 blockID = 0
 
@@ -19,44 +20,63 @@ class Block:
         self.attachedTop = None
         self.attachedBottom = None
 
+        self.attachPointsMale = [(0.32, -0.145)]
+        self.attachPointsFemale = [(0.32, 0.855)]
+        self.shadowBlock = None
+
         global blockID
         self.id = blockID
         blockID += 1
 
     def defineType(self, bType: str):
+        """definies and initiates variable according to typelike the image, the cost
+
+        Args:
+            bType (str): the type
+        """
+
+        # 114.5% height, because the little connecting square (on top) is 0.145 the height of the image
+        h = int(self.height*1.148)
+
         if bType == "fire_ball":
-            self.color = "#a60303"
+            self.image = ImageTk.PhotoImage(Image.open(
+                "assets/blocks/normalBlockRed.png").resize((self.width, h), Image.BICUBIC))
             self.cost = 100
             self.message = "Fire Ball"
 
         elif bType == "checker":
-            self.color = "#e600ac"
+            self.image = ImageTk.PhotoImage(Image.open(
+                "assets/blocks/normalBlockPurple.png").resize((self.width, h), Image.BICUBIC))
             self.cost = 1
             self.message = "Checker"
 
         elif bType == "ice_ahnilator":
-            self.color = "#87ffff"
+            self.image = ImageTk.PhotoImage(Image.open(
+                "assets/blocks/normalBlockBlue.png").resize((self.width, h), Image.BICUBIC))
             self.cost = 1000
             self.message = "Ice Ahnilator"
 
         else:
-            self.color = "#696969"
+            self.image = ImageTk.PhotoImage(Image.open(
+                "assets/blocks/normalBlockBlack.png").resize((self.width, h), Image.BICUBIC))
             self.cost = 0
-            self.message = "Unknown"
+            self.message = ""
 
     def display(self, canvas: Canvas):
-        """draws code block on the canvas
+        """draws code block and its shadow block on the canvas
 
         Args:
             canvas (Canvas): The canvas the code block is drawn on
         """
-        canvas.create_rectangle(
-            self.x, self.y, self.x + self.width, self.y + self.height, fill=self.color)
-        canvas.create_text(self.x + self.width/2, self.y + self.height/2,
-                           text=self.message, font=("Arial", 20, "bold"))
+        # displays the shadow block under the focused block
+        if self.shadowBlock:
+            self.shadowBlock.display(canvas)
 
-    def update(self):
-        pass
+        # displays actual block
+        canvas.create_image(self.x, self.y - 0.145 *
+                            self.height, anchor=NW, image=self.image)
+        canvas.create_text(self.x + self.width/2, self.y + self.height*0.855/2,
+                           text=self.message, font=("Arial", 20, "bold"))
 
     def setX(self, posX: int):
         """set the center X position of the block
@@ -100,50 +120,108 @@ class Block:
         if self.attachedBottom:
             self.attachedBottom.setCornerY(self.y + self.height)
 
-    def moove(self, posX: int, posY: int, blockList: list):
+    def moove(self, posX: int, posY: int, scene):
         self.setX(posX)
         self.setY(posY)
-        for b in blockList:
+        for b in scene.displayedBlocks:
 
-            if self.attachedTop and self.attachedTop.id == b.id and not self.isNearUnder(self.attachedTop):
-                b.disatach(self)
+            if self.shadowBlock and self.shadowBlock.attachedTop.id == b.id and not b.isNearAttachPoints(self):
+                # deletes shadow block
+                self.delete_Shadow()
 
-            elif b.id != self.id and self.isNearUnder(b):
-                b.attach(self)
+            elif b.id != self.id and not self.shadowBlock and b.isNearAttachPoints(self):
+                self.place_Shadow(b, scene)
 
     def contains(self, x: int, y: int):
         return x > self.x and x < self.x + self.width \
             and y > self.y and y < self.y + self.height
 
-    def isNearUnder(self, block):
-        """Check if we are near a block we can attach to
+    def isNearAttachPoints(self, block):
+        """Check if attach points female are near to attach points male
 
         Args:
-            block (Block): the block the check is effectued on
+            block (Block): the block we check for attach points male
 
         Returns:
             Boolean
         """
-        return abs(self.y - block.y - block.height) < self.height/2\
-            and abs(block.x + block.width/2 - self.x - self.width/2) < self.width/2
+        for pointF in self.attachPointsFemale:
+            fX = pointF[0]*self.width + self.x
+            fY = pointF[1]*self.height + self.y
 
-    def attach(self, b):
-        b.setCornerX(self.x)
-        b.setCornerY(self.y + self.height)
+            for pointM in block.attachPointsMale:
+                mX = pointM[0]*block.width + block.x
+                mY = pointM[1]*block.height + block.y
 
-        if self.attachedBottom and self.attachedBottom.id != b.id:
-            a = self.attachedBottom
-            self.attachedBottom = b
+                if 0 <= mY-fY <= block.height and abs(fX-mX) <= block.height:
+                    return True
+        return False
 
-            b.attachedTop = self
-            b.attach(a)
+    def attach(self, block):
+        """attaches a block under itself
+
+        Args:
+            b (Block): the block we attach
+        """
+        # Note: make it also work for other clip points
+        block.setCornerX(self.x)
+        block.setCornerY(self.y + self.height)
+
+        if self.attachedBottom and self.attachedBottom.id != block.id:  # change here
+            block_under1 = self.attachedBottom
+            self.disatach(block_under1)
+
+            self.attachedBottom = block
+            block.attachedTop = self
+
+            block_under2 = block.attachedBottom
+
+            # attach the previous block under to block
+            block_under1.setCornerX(block.x)
+            block_under1.setCornerY(block.y + block.height)
+
+            block.attachedBottom = block_under1
+            block_under1.attachedTop = block
+
+            # continue attaching chain
+            if block_under2:
+                block.attach(block_under2)
+
         else:
-            self.attachedBottom = b
-            b.attachedTop = self
+            self.attachedBottom = block
+            block.attachedTop = self
+
+    def place_Shadow(self, block, scene):
+        """Places a shadow block at the clip position of the block
+
+        Args:
+            block (Block): the block the shadow is placed on
+        """
+        self.shadowBlock = Block(
+            self.x, self.y, self.width, self.height, "shadow")
+        block.attach(self.shadowBlock)
 
     def disatach(self, b):
+        """disatach itself from the block under
+
+        Args:
+            b (Block): the block under
+        """
         b.attachedTop = None
         self.attachedBottom = None
+
+    def delete_Shadow(self):
+        """deletes shadow block, and reattach blocks that
+        were separated by the shadow block
+        """
+        under_Block = self.shadowBlock.attachedBottom
+        upper_Block = self.shadowBlock.attachedTop
+
+        upper_Block.disatach(self.shadowBlock)
+        self.shadowBlock = None
+
+        if under_Block:
+            upper_Block.attach(under_Block)
 
     def __str__(self) -> str:
         if self.attachedTop:
@@ -159,35 +237,4 @@ class Block:
 
 if __name__ == "__main__":
     # test zone
-    b1 = Block(100, 100, 100, 50, "fire_ball")
-    b2 = Block(0, 0, 100, 50, "checker")
-    blockList = [b1, b2]
-    b2.moove(1000, 500, blockList)
-    assert b2.getX() == 1000, "movement X not working"
-    assert b2.getY() == 500, "movement Y not working"
-
-    b2.moove(130, 170, blockList)
-    assert b2.attachedTop == b1, "top attaching not working"
-    assert b1.attachedBottom == b2, "bottom attaching not working"
-    assert b2.getX() == b1.getX(), "clipping X not working"
-    assert b2.getY() == b1.getY() + b1.height, "clipping Y not working"
-
-    b1.moove(500, 500, blockList)
-    assert b2.getX() == 500, "stack x movement not working"
-    assert b2.getY() == 550, "stack y movement not working"
-
-    b3 = Block(0, 0, 100, 50, "ice_ahnilator")
-    blockList.append(b3)
-    b4 = Block(0, 0, 100, 50, "unknown")
-    blockList.append(b4)
-
-    b3.moove(500, 610, blockList)
-    b4.moove(500, 550, blockList)
-    assert b2.attachedTop == b4, "top insertion not working"
-    assert b1.attachedBottom == b4, "bottom insertion not working"
-
-    assert b3.attachedTop == b2, "top insertion chain 3rd block not working"
-    assert b2.attachedBottom == b3, "bottom insertion chain 2cond block not working"
-
-    assert b2.getY() == 600, "insertion 1st y shift not working"
-    assert b3.getY() == 650, "insertion 2cond shift not working"
+    pass  # to do

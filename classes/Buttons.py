@@ -18,7 +18,7 @@ class Button:
         self.isFocused = False
         self.isClicked = False
 
-        self.font = ("Arial", 15, "normal")
+        self.font = ("Arial", 20, "normal")
         self.message = message
 
         self.typeAssignement(buttonType)
@@ -84,16 +84,26 @@ class Button:
         self.isFocused = False
         self.image = self.unfocusedImage
 
-    def focus_Handler(self, isMouseClick):
+    def focus_Handler(self, isMouseClick: bool, scene):
         """Changes image according to the state of the mouse
+        and triggers the button according to its type
         call only if mouse is in button
 
         Args:
             isMouseClick (bool): if the mouse is clicked
         """
-        if isMouseClick:
+        if isMouseClick  and not scene.focusedBlock:
             self.isClicked = True
             self.image = self.clickedImage
+
+            # click according to the button type
+            if self.type == "block_creation":
+                self.isClicked = False
+                self.click_Handler(scene)
+
+        # click if button press was released
+        elif self.isClicked and not scene.focusedBlock:
+            self.click_Handler(scene)
 
         elif not self.isFocused:
             self.isFocused = True
@@ -102,7 +112,6 @@ class Button:
     def click_Handler(self, scene):
         """Handles the button release, and the event that will follow
         """
-
         # changes the button state
         self.isClicked = False
         self.image = self.focusedImage
@@ -111,6 +120,13 @@ class Button:
             scene.loadLevel(self.level)
 
         elif self.type == "block_creation":
+            # create block
             bt = self.blockType
-            # changes to do: block should spawn focused and on top of the player's cursor
-            scene.add_Object(Block(bt[0], bt[1], bt[2], bt[3], bt[4]))
+            new_block = Block(0, 0, bt[0], bt[1], bt[2])
+            scene.add_Object(new_block)
+
+            # focus block
+            new_block.isFocused = True
+            if scene.focusedBlock:
+                scene.focusedBlock.isFocused = False
+            scene.focusedBlock = new_block

@@ -8,14 +8,14 @@ if __name__ == "classes.Scene":
 
 def levels():
     return \
-        {"test": [Block(200, 490, 200, 50, "fire_ball"),
+        {"test": [Block(900, 350, 200, 50, "fire_ball"),
                   Block(700, 500, 200, 50, "ice_ahnilator"),
-                  Block(1200, 70, 200, 50, "sledkhjgb"),
-                  Block(500, 200, 200, 50, "checker"),
-                  Button(100, 100, 200, 50, "Change Level",
+                  Block(1000, 70, 200, 50, "checker"),
+                  Block(700, 200, 200, 50, "checker"),
+                  Button(50, 100, 200, 50, "Change Level",
                          ("level transition", "editor")),
-                  Button(1000, 250, 100, 50, "New Block",
-                         ("block creation", (200, 490, 200, 50, "fire_ball")))
+                  Button(50, 250, 200, 50, "Fire Ball",
+                         ("block creation", (200, 50, "fire_ball")))
                   ],
 
          "editor": [Block(200, 490, 200, 50, "fire_ball"),
@@ -58,14 +58,17 @@ class Scene:
         if self.levels.get(levelName):
             # reset variables
             self.displayedBlocks = []
+            self.displayedButtons = []
             self.focusedBlock = None
 
             # update variables to new level
             self.displayedObjects = self.levels[levelName]
+
             for obj in self.displayedObjects:
 
                 if type(obj) == Block:
                     self.displayedBlocks.append(obj)
+
                 elif type(obj) == Button:
                     self.displayedButtons.append(obj)
 
@@ -81,3 +84,20 @@ class Scene:
             self.displayedBlocks.append(obj)
         elif type(obj) == Button:
             self.displayedButtons.append(obj)
+
+    def delete_Object(self, obj) -> None:
+        """deletes an object from the current scene
+
+        Args:
+            obj (Button/Block): the object to delete
+        """
+        self.displayedObjects.remove(obj)
+
+        if type(obj) == Block:
+            self.displayedBlocks.remove(obj)
+
+            if self.focusedBlock == obj:
+                self.focusedBlock = None
+
+        elif type(obj) == Button:
+            self.displayedButtons.remove(obj)
