@@ -1,7 +1,7 @@
 from tkinter import *
 from tkinter import messagebox
 from time import time
-import classes.CodingBlock as cb
+from classes.CodingBlock import Block
 from classes.Keyboard_Handler import Keyboard
 from classes.Mouse_Handler import Mouse
 from classes.Scene import Scene
@@ -54,25 +54,53 @@ def update():
     #---block logic---#
 
     # block focusing logic
-    if mouse.isRightClick and gameScene.focusedBlock == None:
+    if mouse.isLeftClick and gameScene.focusedBlock == None:
 
         # pass trough every block to see which one sould be focused
         for b in gameScene.displayedBlocks:
             if b.contains(mouse.x, mouse.y):
+                # focus block
                 gameScene.focusedBlock = b
                 b.isFocused = True
 
-    # if no click
-    elif not mouse.isRightClick and gameScene.focusedBlock:
+                # disatach block
+                if b.attachedTop:
+                    b.attachedTop.disatach(b)
 
-        # unfocus block
+    # if no click
+    elif not mouse.isLeftClick and gameScene.focusedBlock:
+
+        # clip block if he has a shadow block
+        if gameScene.focusedBlock.shadowBlock:
+            b = gameScene.focusedBlock.shadowBlock.attachedTop
+
+            # destroy shadow block
+            gameScene.focusedBlock.delete_Shadow()
+
+            # clip focused block
+            b.attach(gameScene.focusedBlock)
+
+            # unfocus block
         gameScene.focusedBlock.isFocused = False
         gameScene.focusedBlock = None
 
     # moves the blocks
     if gameScene.focusedBlock:
         gameScene.focusedBlock.moove(
-            mouse.x, mouse.y, gameScene.displayedBlocks)
+            mouse.x, mouse.y, gameScene)
+
+    #---button logic---#
+
+    # button focussing and pressing logic
+    for b in gameScene.displayedButtons:
+
+        if b.contains(mouse.x, mouse.y):
+            # focus button
+            b.focus_Handler(mouse.isLeftClick, gameScene)
+
+        elif b.isFocused:
+            # unfocus button
+            b.unfocus_Handler()
 
 
 def repaint():

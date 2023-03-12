@@ -5,8 +5,8 @@ class Mouse:
 
     def __init__(self, root: Tk) -> None:
         # variables definition
-        self.isRightClick = False
         self.isLeftClick = False
+        self.isRightClick = False
         self.isMiddleClick = False
         self.x = 0
         self.y = 0
@@ -23,9 +23,9 @@ class Mouse:
             event (ButtonPress Event): the click
         """
         if event.num == 1:
-            self.isRightClick = True
-        elif event.num == 2:
             self.isLeftClick = True
+        elif event.num == 2:
+            self.isRightClick = True
         elif event.num == 3:
             self.isMiddleClick = True
 
@@ -36,9 +36,9 @@ class Mouse:
             event (ButtonRelease Event): the end of the click
         """
         if event.num == 1:
-            self.isRightClick = False
-        elif event.num == 2:
             self.isLeftClick = False
+        elif event.num == 2:
+            self.isRightClick = False
         elif event.num == 3:
             self.isMiddleClick = False
 
