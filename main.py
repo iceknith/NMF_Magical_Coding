@@ -59,13 +59,20 @@ def update():
         # pass trough every block to see which one sould be focused
         for b in gameScene.displayedBlocks:
             if b.contains(mouse.x, mouse.y):
-                # focus block
-                gameScene.focusedBlock = b
-                b.isFocused = True
-
                 # disatach block
                 if b.attachedTop:
                     b.attachedTop.disatach(b)
+
+                # put block on top
+                bChain = b
+                while bChain:
+                    gameScene.delete_Object(bChain)
+                    gameScene.add_Object(bChain)
+                    bChain = bChain.attachedBottom
+
+                # focus block
+                gameScene.focusedBlock = b
+                b.isFocused = True
 
     # if no click
     elif not mouse.isLeftClick and gameScene.focusedBlock:

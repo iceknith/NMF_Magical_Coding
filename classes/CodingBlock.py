@@ -153,7 +153,7 @@ class Block:
                 mX = pointM[0]*block.width + block.x
                 mY = pointM[1]*block.height + block.y
 
-                if 0 <= mY-fY <= block.height and abs(fX-mX) <= block.height:
+                if 0 <= mY-fY < block.height and abs(fX-mX) < block.width/2:
                     return True
         return False
 
