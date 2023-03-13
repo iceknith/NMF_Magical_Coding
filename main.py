@@ -5,6 +5,7 @@ from classes.CodingBlock import Block
 from classes.Keyboard_Handler import Keyboard
 from classes.Mouse_Handler import Mouse
 from classes.Scene import Scene
+from copy import copy
 
 
 def gameLoop():
@@ -66,8 +67,9 @@ def update():
                 # put block on top
                 bChain = b
                 while bChain:
-                    gameScene.delete_Object(bChain)
-                    gameScene.add_Object(bChain)
+                    # visually update block chain
+                    gameScene.update_Object(bChain, temporary=False)
+
                     bChain = bChain.attachedBottom
 
                 # focus block
@@ -82,12 +84,18 @@ def update():
             b = gameScene.focusedBlock.shadowBlock.attachedTop
 
             # destroy shadow block
-            gameScene.focusedBlock.delete_Shadow()
+            gameScene.focusedBlock.delete_Shadow(gameScene)
 
             # clip focused block
-            b.attach(gameScene.focusedBlock)
+            b.attach(gameScene.focusedBlock, gameScene)
 
-            # unfocus block
+        # update visually block chain one last time
+        bChain = gameScene.focusedBlock
+        while bChain:
+            gameScene.temporaryDisplayedObject.append(bChain.id)
+            bChain = bChain.attachedBottom
+
+        # unfocus block
         gameScene.focusedBlock.isFocused = False
         gameScene.focusedBlock = None
 
@@ -107,19 +115,40 @@ def update():
 
         elif b.isFocused:
             # unfocus button
-            b.unfocus_Handler()
+            b.unfocus_Handler(gameScene)
 
 
 def repaint():
-    # reset
-    canvas.delete("all")
+    # delete objects
+    canvas.delete("fps")
+    canvas.delete("temporary")
+    for objID in gameScene.objectsToDelete:
+        canvas.delete(objID)
 
-    # draw everything
-    for b in gameScene.displayedObjects:
-        b.display(canvas)
+    # making clone of objects to display to prevent concurrent modification exception
+    objToDisplay = copy(gameScene.objectsToDisplay)
 
+    for obj in objToDisplay:
+        print(obj)
+        # delete objects that are repainted
+        for objID in obj.canvasObjectsID:
+            canvas.delete(objID)
+
+        # draw everything that has changed
+        obj.display(canvas)
+
+        # deletes item if he was only temporary
+        if obj.id in gameScene.temporaryDisplayedObject:
+            gameScene.stop_Display_Object(obj)
+
+    # reset deleted and temporary object list
+    gameScene.objectsToDelete.clear()
+    gameScene.temporaryDisplayedObject.clear()
+
+    # display fps
     canvas.create_text(
-        50, 10, text=f"fps : {currentFPS} / {fps}", font=("Arial", 10, "bold")
+        50, 10, text=f"fps : {currentFPS} / {fps}",
+        font=("Arial", 10, "bold"), tags=("fps")
     )
     root.update()
 

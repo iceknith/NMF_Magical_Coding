@@ -36,7 +36,10 @@ class Scene:
 
     def __init__(self, levelName: str) -> None:
         # variables definition
-        self.displayedObjects = []
+        self.objectsToDisplay = []
+        self.objectsToDelete = []
+
+        self.temporaryDisplayedObject = []
 
         self.displayedBlocks = []
         self.focusedBlock = None
@@ -60,26 +63,30 @@ class Scene:
             self.displayedBlocks = []
             self.displayedButtons = []
             self.focusedBlock = None
+            self.objectsToDelete.append("all")
 
-            # update variables to new level
-            self.displayedObjects = self.levels[levelName]
+            for obj in self.levels[levelName]:
 
-            for obj in self.displayedObjects:
+                # update them only one time
+                self.update_Object(obj)
 
+                # put object in the according category
                 if type(obj) == Block:
                     self.displayedBlocks.append(obj)
 
                 elif type(obj) == Button:
                     self.displayedButtons.append(obj)
 
-    def add_Object(self, obj) -> None:
+    def add_Object(self, obj, temporaryUpdate=True) -> None:
         """adds an object to the current scene
 
         Args:
             obj (Button/Block): the object to add
         """
-        self.displayedObjects.append(obj)
+        # update object
+        self.update_Object(obj, temporaryUpdate)
 
+        # put object in the according category
         if type(obj) == Block:
             self.displayedBlocks.append(obj)
         elif type(obj) == Button:
@@ -91,8 +98,6 @@ class Scene:
         Args:
             obj (Button/Block): the object to delete
         """
-        self.displayedObjects.remove(obj)
-
         if type(obj) == Block:
             self.displayedBlocks.remove(obj)
 
@@ -101,3 +106,33 @@ class Scene:
 
         elif type(obj) == Button:
             self.displayedButtons.remove(obj)
+
+        # stop displaying it and deleting it
+        for canvObjID in obj.canvasObjectsID:
+            self.objectsToDelete.append(canvObjID)
+
+        if obj in self.objectsToDisplay:
+            self.stop_Display_Object(obj)
+
+    def update_Object(self, obj, temporary=True):
+        """Visually update object for one frame or until we call stop_Update_Object
+
+        Args:
+            obj (Block/Button): object to update
+            canvas (Canvas): the canvas the object is drawn on
+            temporary (bool): if the object is updated for only one frame
+        """
+        if not obj in self.objectsToDisplay:
+            self.objectsToDisplay.append(obj)
+
+            if temporary:
+                self.temporaryDisplayedObject.append(obj.id)
+
+    def stop_Display_Object(self, obj):
+        """Stop visually updating an object
+
+        Args:
+            obj (Block/Button): object to stop updating
+            canvas (Canvas): the canvas the object is drawn on
+        """
+        self.objectsToDisplay.remove(obj)

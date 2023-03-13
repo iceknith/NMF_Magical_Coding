@@ -6,6 +6,9 @@ if __name__ == "classes.Buttons":
     from classes.CodingBlock import Block
 
 
+buttonID = 0
+
+
 class Button:
 
     def __init__(self, x: int, y: int, width: int, height: int, message: str, buttonType: tuple) -> None:
@@ -14,6 +17,7 @@ class Button:
         self.y = y
         self.width = width
         self.height = height
+        self.canvasObjectsID = []
 
         self.isFocused = False
         self.isClicked = False
@@ -22,6 +26,10 @@ class Button:
         self.message = message
 
         self.typeAssignement(buttonType)
+
+        global buttonID
+        self.id = "Button" + str(buttonID)
+        buttonID += 1
 
     def typeAssignement(self, buttonType: str):
         """A function that defines the button type, and the skin it
@@ -67,15 +75,16 @@ class Button:
         self.image = self.unfocusedImage
 
     def display(self, canvas: Canvas):
-        canvas.create_image(self.x, self.y, anchor=NW, image=self.image)
-        canvas.create_text(self.x + self.width/2, self.y + self.height/2,
-                           text=self.message, font=("Arial", 20, "bold"))
+        self.canvasObjectsID.append(canvas.create_image(
+            self.x, self.y, anchor=NW, image=self.image))
+        self.canvasObjectsID.append(canvas.create_text(self.x + self.width/2, self.y + self.height/2,
+                                                       text=self.message, font=("Arial", 20, "bold")))
 
     def contains(self, x: int, y: int):
         return x > self.x and x < self.x + self.width \
             and y > self.y and y < self.y + self.height
 
-    def unfocus_Handler(self):
+    def unfocus_Handler(self, scene):
         """Changes image and state to unfocus
         call only if mouse is not in button
         """
@@ -83,6 +92,7 @@ class Button:
         self.isClicked = False
         self.isFocused = False
         self.image = self.unfocusedImage
+        scene.update_Object(self)
 
     def focus_Handler(self, isMouseClick: bool, scene):
         """Changes image according to the state of the mouse
@@ -92,9 +102,10 @@ class Button:
         Args:
             isMouseClick (bool): if the mouse is clicked
         """
-        if isMouseClick  and not scene.focusedBlock:
+        if isMouseClick and not scene.focusedBlock:
             self.isClicked = True
             self.image = self.clickedImage
+            scene.update_Object(self)
 
             # click according to the button type
             if self.type == "block_creation":
@@ -108,6 +119,7 @@ class Button:
         elif not self.isFocused:
             self.isFocused = True
             self.image = self.focusedImage
+            scene.update_Object(self)
 
     def click_Handler(self, scene):
         """Handles the button release, and the event that will follow
@@ -122,8 +134,8 @@ class Button:
         elif self.type == "block_creation":
             # create block
             bt = self.blockType
-            new_block = Block(0, 0, bt[0], bt[1], bt[2])
-            scene.add_Object(new_block)
+            new_block = Block(-10000, 0, bt[0], bt[1], bt[2])
+            scene.add_Object(new_block, temporaryUpdate=False)
 
             # focus block
             new_block.isFocused = True

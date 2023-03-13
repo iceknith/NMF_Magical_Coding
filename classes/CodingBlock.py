@@ -13,6 +13,7 @@ class Block:
         self.height = h
         self.x = posX - self.width/2
         self.y = posY - self.height/2
+        self.canvasObjectsID = []
 
         self.defineType(bType)
 
@@ -25,7 +26,7 @@ class Block:
         self.shadowBlock = None
 
         global blockID
-        self.id = blockID
+        self.id = "Block" + str(blockID)
         blockID += 1
 
     def defineType(self, bType: str):
@@ -72,27 +73,36 @@ class Block:
         if self.shadowBlock:
             self.shadowBlock.display(canvas)
 
-        # displays actual block
-        canvas.create_image(self.x, self.y - 0.145 *
-                            self.height, anchor=NW, image=self.image)
-        canvas.create_text(self.x + self.width/2, self.y + self.height*0.855/2,
-                           text=self.message, font=("Arial", 20, "bold"))
+        # reset variables
+        self.canvasObjectsID.clear()
 
-    def setX(self, posX: int):
+        # displays actual block
+        if self.message == "":
+            self.canvasObjectsID.append(canvas.create_image(self.x, self.y - 0.145 *
+                                                            self.height, anchor=NW, image=self.image, tags=("temporary")))
+            self.canvasObjectsID.append(canvas.create_text(self.x + self.width/2, self.y + self.height*0.855/2,
+                                                           text=self.message, font=("Arial", 20, "bold"), tags=("temporary")))
+        else:
+            self.canvasObjectsID.append(canvas.create_image(self.x, self.y - 0.145 *
+                                                            self.height, anchor=NW, image=self.image))
+            self.canvasObjectsID.append(canvas.create_text(self.x + self.width/2, self.y + self.height*0.855/2,
+                                                           text=self.message, font=("Arial", 20, "bold")))
+
+    def setX(self, posX: int, scene):
         """set the center X position of the block
 
         Args:
             posX (int): the x center
         """
-        self.setCornerX(posX - self.width/2)
+        self.setCornerX(posX - self.width/2, scene)
 
-    def setY(self, posY: int):
+    def setY(self, posY: int, scene):
         """set the center Y position of the block
 
         Args:
             posX (int): the y center
         """
-        self.setCornerY(posY - self.height/2)
+        self.setCornerY(posY - self.height/2, scene)
 
     def getX(self):
         """get center X position of the block
@@ -110,26 +120,34 @@ class Block:
         """
         return self.y + self.height/2
 
-    def setCornerX(self, posX: int):
+    def setCornerX(self, posX: int, scene):
         self.x = posX
+        # update if not focused (because focused block have more optimised ways)
+        if not self.isFocused:
+            scene.update_Object(self)
+        # continue chain
         if self.attachedBottom:
-            self.attachedBottom.setCornerX(self.x)
+            self.attachedBottom.setCornerX(self.x, scene)
 
-    def setCornerY(self, posY: int):
+    def setCornerY(self, posY: int, scene):
         self.y = posY
+        # update if not focused (because focused block have more optimised ways)
+        if not self.isFocused:
+            scene.update_Object(self)
         if self.attachedBottom:
-            self.attachedBottom.setCornerY(self.y + self.height)
+            self.attachedBottom.setCornerY(self.y + self.height, scene)
 
     def moove(self, posX: int, posY: int, scene):
-        self.setX(posX)
-        self.setY(posY)
+        self.setX(posX, scene)
+        self.setY(posY, scene)
         for b in scene.displayedBlocks:
 
             if self.shadowBlock and self.shadowBlock.attachedTop.id == b.id and not b.isNearAttachPoints(self):
                 # deletes shadow block
-                self.delete_Shadow()
+                self.delete_Shadow(scene)
 
             elif b.id != self.id and not self.shadowBlock and b.isNearAttachPoints(self):
+                print("MADE SHADOW")
                 self.place_Shadow(b, scene)
 
     def contains(self, x: int, y: int):
@@ -157,15 +175,15 @@ class Block:
                     return True
         return False
 
-    def attach(self, block):
+    def attach(self, block, scene):
         """attaches a block under itself
 
         Args:
             b (Block): the block we attach
         """
         # Note: make it also work for other clip points
-        block.setCornerX(self.x)
-        block.setCornerY(self.y + self.height)
+        block.setCornerX(self.x, scene)
+        block.setCornerY(self.y + self.height, scene)
 
         if self.attachedBottom and self.attachedBottom.id != block.id:  # change here
             block_under1 = self.attachedBottom
@@ -177,15 +195,15 @@ class Block:
             block_under2 = block.attachedBottom
 
             # attach the previous block under to block
-            block_under1.setCornerX(block.x)
-            block_under1.setCornerY(block.y + block.height)
+            block_under1.setCornerX(block.x, scene)
+            block_under1.setCornerY(block.y + block.height, scene)
 
             block.attachedBottom = block_under1
             block_under1.attachedTop = block
 
             # continue attaching chain
             if block_under2:
-                block.attach(block_under2)
+                block.attach(block_under2, scene)
 
         else:
             self.attachedBottom = block
@@ -199,7 +217,7 @@ class Block:
         """
         self.shadowBlock = Block(
             self.x, self.y, self.width, self.height, "shadow")
-        block.attach(self.shadowBlock)
+        block.attach(self.shadowBlock, scene)
 
     def disatach(self, b):
         """disatach itself from the block under
@@ -210,7 +228,7 @@ class Block:
         b.attachedTop = None
         self.attachedBottom = None
 
-    def delete_Shadow(self):
+    def delete_Shadow(self, scene):
         """deletes shadow block, and reattach blocks that
         were separated by the shadow block
         """
@@ -221,7 +239,7 @@ class Block:
         self.shadowBlock = None
 
         if under_Block:
-            upper_Block.attach(under_Block)
+            upper_Block.attach(under_Block, scene)
 
     def __str__(self) -> str:
         if self.attachedTop:
