@@ -1,7 +1,6 @@
 from tkinter import *
 from tkinter import messagebox
 from time import time
-from classes.CodingBlock import Block
 from classes.Keyboard_Handler import Keyboard
 from classes.Mouse_Handler import Mouse
 from classes.Scene import Scene
@@ -59,16 +58,10 @@ def update():
         # pass trough every block to see which one sould be focused
         for b in gameScene.displayedBlocks:
             if b.contains(mouse.x, mouse.y):
+
                 # disatach block
                 if b.attachedTop:
                     b.attachedTop.disatach(b)
-
-                # put block on top
-                bChain = b
-                while bChain:
-                    gameScene.delete_Object(bChain)
-                    gameScene.add_Object(bChain)
-                    bChain = bChain.attachedBottom
 
                 # focus block
                 gameScene.focusedBlock = b
@@ -87,12 +80,12 @@ def update():
             # clip focused block
             b.attach(gameScene.focusedBlock)
 
-            # unfocus block
+        # unfocus block
         gameScene.focusedBlock.isFocused = False
         gameScene.focusedBlock = None
 
     # moves the blocks
-    if gameScene.focusedBlock:
+    if gameScene.focusedBlock and mouse.was_Movement():
         gameScene.focusedBlock.moove(
             mouse.x, mouse.y, gameScene)
 
@@ -111,15 +104,13 @@ def update():
 
 
 def repaint():
-    # reset
-    canvas.delete("all")
+    # delete objects
+    canvas.delete("fps")
 
-    # draw everything
-    for b in gameScene.displayedObjects:
-        b.display(canvas)
-
+    # display fps
     canvas.create_text(
-        50, 10, text=f"fps : {currentFPS} / {fps}", font=("Arial", 10, "bold")
+        50, 10, text=f"fps : {currentFPS} / {fps}",
+        font=("Arial", 10, "bold"), tags=("fps")
     )
     root.update()
 
@@ -161,7 +152,7 @@ if __name__ == "__main__":
     currentFPS = 0
 
     # initialise scene
-    gameScene = Scene("test")
+    gameScene = Scene("test", canvas)
 
     # game loop call
     gameLoop()

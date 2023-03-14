@@ -6,14 +6,18 @@ if __name__ == "classes.Buttons":
     from classes.CodingBlock import Block
 
 
+buttonID = 0
+
+
 class Button:
 
-    def __init__(self, x: int, y: int, width: int, height: int, message: str, buttonType: tuple) -> None:
+    def __init__(self, x: int, y: int, width: int, height: int, message: str, buttonType: tuple, canvas: Canvas) -> None:
         # variables defnition
         self.x = x
         self.y = y
         self.width = width
         self.height = height
+        self.canvasObjectsID = []
 
         self.isFocused = False
         self.isClicked = False
@@ -21,7 +25,13 @@ class Button:
         self.font = ("Arial", 20, "normal")
         self.message = message
 
+        self.canvas = canvas
+
         self.typeAssignement(buttonType)
+
+        global buttonID
+        self.id = "Button" + str(buttonID)
+        buttonID += 1
 
     def typeAssignement(self, buttonType: str):
         """A function that defines the button type, and the skin it
@@ -66,12 +76,39 @@ class Button:
         # setting active image
         self.image = self.unfocusedImage
 
-    def display(self, canvas: Canvas):
-        canvas.create_image(self.x, self.y, anchor=NW, image=self.image)
-        canvas.create_text(self.x + self.width/2, self.y + self.height/2,
-                           text=self.message, font=("Arial", 20, "bold"))
+    def visual_Update(self):
+        """draws the button on the canvas
+        """
+
+        # destroy previous displayed buttons
+        self.delete_Visually()
+
+        # reset variables
+        self.canvasObjectsID.clear()
+
+        # display button
+        self.canvasObjectsID.append(self.canvas.create_image(
+            self.x, self.y, anchor=NW, image=self.image))
+        self.canvasObjectsID.append(self.canvas.create_text(self.x + self.width/2, self.y + self.height/2,
+                                                            text=self.message, font=("Arial", 20, "bold")))
+
+    def delete_Visually(self):
+        """deletes the button image from the canvas
+        """
+        for objID in self.canvasObjectsID:
+            self.canvas.delete(objID)
 
     def contains(self, x: int, y: int):
+        """Returns True if the point of coordinates (x,y) is in the block's hitbox
+
+        Args:
+            x (int): the x coordinated of the point
+            y (int): the y coordinates of the point
+
+        Returns:
+            bool: if (x,y) in block
+        """
+
         return x > self.x and x < self.x + self.width \
             and y > self.y and y < self.y + self.height
 
@@ -83,6 +120,7 @@ class Button:
         self.isClicked = False
         self.isFocused = False
         self.image = self.unfocusedImage
+        self.visual_Update()
 
     def focus_Handler(self, isMouseClick: bool, scene):
         """Changes image according to the state of the mouse
@@ -92,9 +130,10 @@ class Button:
         Args:
             isMouseClick (bool): if the mouse is clicked
         """
-        if isMouseClick  and not scene.focusedBlock:
+        if isMouseClick and not scene.focusedBlock:
             self.isClicked = True
             self.image = self.clickedImage
+            self.visual_Update()
 
             # click according to the button type
             if self.type == "block_creation":
@@ -108,6 +147,7 @@ class Button:
         elif not self.isFocused:
             self.isFocused = True
             self.image = self.focusedImage
+            self.visual_Update()
 
     def click_Handler(self, scene):
         """Handles the button release, and the event that will follow
@@ -117,12 +157,12 @@ class Button:
         self.image = self.focusedImage
 
         if self.type == "level_transition":
-            scene.loadLevel(self.level)
+            scene.loadLevel(self.level, self.canvas)
 
         elif self.type == "block_creation":
             # create block
             bt = self.blockType
-            new_block = Block(0, 0, bt[0], bt[1], bt[2])
+            new_block = Block(-10000, 0, bt[0], bt[1], bt[2], self.canvas)
             scene.add_Object(new_block)
 
             # focus block
