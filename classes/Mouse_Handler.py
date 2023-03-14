@@ -11,6 +11,8 @@ class Mouse:
         self.x = 0
         self.y = 0
 
+        self.movement = False
+
         # binding fontions to root
         root.bind("<ButtonPress>", self.button_Pressed_Handler)
         root.bind("<ButtonRelease>", self.button_Release_Handler)
@@ -48,4 +50,18 @@ class Mouse:
         Args:
             event (Motion Event): the mouse movement
         """
+        self.movement = True
         self.x, self.y = event.x, event.y
+
+    def was_Movement(self) -> bool:
+        """Return True if there was a mouse movement since the last call
+
+        Returns:
+            bool: if there was a mouse movement since the last call
+        """
+        wasMovement = self.movement
+
+        if self.movement:
+            self.movement = False
+
+        return wasMovement

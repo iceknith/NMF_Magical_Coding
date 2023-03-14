@@ -77,6 +77,9 @@ class Button:
         self.image = self.unfocusedImage
 
     def visual_Update(self):
+        """draws the button on the canvas
+        """
+
         # destroy previous displayed buttons
         self.delete_Visually()
 
@@ -96,6 +99,16 @@ class Button:
             self.canvas.delete(objID)
 
     def contains(self, x: int, y: int):
+        """Returns True if the point of coordinates (x,y) is in the block's hitbox
+
+        Args:
+            x (int): the x coordinated of the point
+            y (int): the y coordinates of the point
+
+        Returns:
+            bool: if (x,y) in block
+        """
+
         return x > self.x and x < self.x + self.width \
             and y > self.y and y < self.y + self.height
 

@@ -85,7 +85,7 @@ def update():
         gameScene.focusedBlock = None
 
     # moves the blocks
-    if gameScene.focusedBlock:
+    if gameScene.focusedBlock and mouse.was_Movement():
         gameScene.focusedBlock.moove(
             mouse.x, mouse.y, gameScene)
 

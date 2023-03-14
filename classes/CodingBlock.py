@@ -21,7 +21,7 @@ class Block:
         self.attachedTop = None
         self.attachedBottom = None
 
-        self.attachPointsMale = [(0.32, -0.145)]
+        self.attachPointsMale = [(0.32, -0.145)]  # temporary, will change
         self.attachPointsFemale = [(0.32, 0.855)]
         self.shadowBlock = None
 
@@ -32,7 +32,7 @@ class Block:
         blockID += 1
 
     def defineType(self, bType: str):
-        """definies and initiates variable according to typelike the image, the cost
+        """definies and initiates variable according to type, like the image and the mana cost
 
         Args:
             bType (str): the type
@@ -66,11 +66,8 @@ class Block:
             self.message = ""
 
     def visual_Update(self):
-        """draws code block and its shadow block on the canvas
+        """draws the code block on the canvas
         """
-        """# displays the shadow block under the focused block
-        if self.shadowBlock:
-            self.shadowBlock.visual_Update(self.canvas)"""
 
         # destroy previous displayed block
         self.delete_Visually()
@@ -87,6 +84,7 @@ class Block:
     def delete_Visually(self):
         """deletes the code block image from the canvas
         """
+
         for objID in self.canvasObjectsID:
             self.canvas.delete(objID)
 
@@ -123,9 +121,17 @@ class Block:
         return self.y + self.height/2
 
     def setCornerX(self, posX: int):
+        """set the corner X position of the block,
+        update it visually to display the change and repeat for
+        the attached blocks
+
+        Args:
+            posX (int): the x positon
+        """
         # visual update
         for objID in self.canvasObjectsID:
             self.canvas.move(objID, posX - self.x, 0)
+
             # put on top
             self.canvas.tag_raise(objID)
 
@@ -137,6 +143,13 @@ class Block:
             self.attachedBottom.setCornerX(self.x)
 
     def setCornerY(self, posY: int):
+        """set the corner Y position of the block,
+        update it visually to display the change and repeat for
+        the attached blocks
+
+        Args:
+            posY (int): the x positon
+        """
         # visual update
         for objID in self.canvasObjectsID:
             self.canvas.move(objID, 0, posY - self.y)
@@ -151,6 +164,15 @@ class Block:
             self.attachedBottom.setCornerY(self.y + self.height)
 
     def moove(self, posX: int, posY: int, scene):
+        """Dinamically moove the coding block, making shadow block
+        apear where it would snap if it is to be released
+
+        Args:
+            posX (int): the new X position
+            posY (int): the new Y position
+            scene (Scene): the scene where the block is stored
+        """
+
         self.setX(posX)
         self.setY(posY)
         for b in scene.displayedBlocks:
@@ -162,11 +184,21 @@ class Block:
             elif b.id != self.id and not self.shadowBlock and b.isNearAttachPoints(self):
                 self.place_Shadow(b)
 
-    def contains(self, x: int, y: int):
+    def contains(self, x: int, y: int) -> bool:
+        """Returns True if the point of coordinates (x,y) is in the block's hitbox
+
+        Args:
+            x (int): the x coordinated of the point
+            y (int): the y coordinates of the point
+
+        Returns:
+            bool: if (x,y) in block
+        """
+
         return x > self.x and x < self.x + self.width \
             and y > self.y and y < self.y + self.height
 
-    def isNearAttachPoints(self, block):
+    def isNearAttachPoints(self, block) -> bool:
         """Check if attach points female are near to attach points male
 
         Args:
@@ -268,8 +300,3 @@ class Block:
         else:
             ab = "N"
         return f"{self.message} block, x: {self.x}, y: {self.y}, width: {self.width}, height: {self.height}, isFocused: {self.isFocused}, attachedTop: {at}, attachedBottom: {ab}"
-
-
-if __name__ == "__main__":
-    # test zone
-    pass  # to do
