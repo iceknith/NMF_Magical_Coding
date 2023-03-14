@@ -8,7 +8,7 @@ class Block:
     """Coding Block: is used to graphically display actions of code
         they can interract with each other, and form programms"""
 
-    def __init__(self, posX: int, posY: int, w: int, h: int, bType: str) -> None:
+    def __init__(self, posX: int, posY: int, w: int, h: int, bType: str, canvas: Canvas) -> None:
         self.width = w
         self.height = h
         self.x = posX - self.width/2
@@ -24,6 +24,8 @@ class Block:
         self.attachPointsMale = [(0.32, -0.145)]
         self.attachPointsFemale = [(0.32, 0.855)]
         self.shadowBlock = None
+
+        self.canvas = canvas
 
         global blockID
         self.id = "Block" + str(blockID)
@@ -63,46 +65,46 @@ class Block:
             self.cost = 0
             self.message = ""
 
-    def display(self, canvas: Canvas):
+    def visual_Update(self):
         """draws code block and its shadow block on the canvas
-
-        Args:
-            canvas (Canvas): The canvas the code block is drawn on
         """
-        # displays the shadow block under the focused block
+        """# displays the shadow block under the focused block
         if self.shadowBlock:
-            self.shadowBlock.display(canvas)
+            self.shadowBlock.visual_Update(self.canvas)"""
+
+        # destroy previous displayed block
+        self.delete_Visually()
 
         # reset variables
         self.canvasObjectsID.clear()
 
         # displays actual block
-        if self.message == "":
-            self.canvasObjectsID.append(canvas.create_image(self.x, self.y - 0.145 *
-                                                            self.height, anchor=NW, image=self.image, tags=("temporary")))
-            self.canvasObjectsID.append(canvas.create_text(self.x + self.width/2, self.y + self.height*0.855/2,
-                                                           text=self.message, font=("Arial", 20, "bold"), tags=("temporary")))
-        else:
-            self.canvasObjectsID.append(canvas.create_image(self.x, self.y - 0.145 *
-                                                            self.height, anchor=NW, image=self.image))
-            self.canvasObjectsID.append(canvas.create_text(self.x + self.width/2, self.y + self.height*0.855/2,
-                                                           text=self.message, font=("Arial", 20, "bold")))
+        self.canvasObjectsID.append(self.canvas.create_image(self.x, self.y - 0.145 *
+                                                             self.height, anchor=NW, image=self.image))
+        self.canvasObjectsID.append(self.canvas.create_text(self.x + self.width/2, self.y + self.height*0.855/2,
+                                                            text=self.message, font=("Arial", 20, "bold")))
 
-    def setX(self, posX: int, scene):
+    def delete_Visually(self):
+        """deletes the code block image from the canvas
+        """
+        for objID in self.canvasObjectsID:
+            self.canvas.delete(objID)
+
+    def setX(self, posX: int):
         """set the center X position of the block
 
         Args:
             posX (int): the x center
         """
-        self.setCornerX(posX - self.width/2, scene)
+        self.setCornerX(posX - self.width/2)
 
-    def setY(self, posY: int, scene):
+    def setY(self, posY: int):
         """set the center Y position of the block
 
         Args:
             posX (int): the y center
         """
-        self.setCornerY(posY - self.height/2, scene)
+        self.setCornerY(posY - self.height/2)
 
     def getX(self):
         """get center X position of the block
@@ -120,35 +122,45 @@ class Block:
         """
         return self.y + self.height/2
 
-    def setCornerX(self, posX: int, scene):
+    def setCornerX(self, posX: int):
+        # visual update
+        for objID in self.canvasObjectsID:
+            self.canvas.move(objID, posX - self.x, 0)
+            # put on top
+            self.canvas.tag_raise(objID)
+
+        # set variables
         self.x = posX
-        # update if not focused (because focused block have more optimised ways)
-        if not self.isFocused:
-            scene.update_Object(self)
+
         # continue chain
         if self.attachedBottom:
-            self.attachedBottom.setCornerX(self.x, scene)
+            self.attachedBottom.setCornerX(self.x)
 
-    def setCornerY(self, posY: int, scene):
+    def setCornerY(self, posY: int):
+        # visual update
+        for objID in self.canvasObjectsID:
+            self.canvas.move(objID, 0, posY - self.y)
+            # put on top
+            self.canvas.tag_raise(objID)
+
+        # set variables
         self.y = posY
-        # update if not focused (because focused block have more optimised ways)
-        if not self.isFocused:
-            scene.update_Object(self)
+
+        # continue chain
         if self.attachedBottom:
-            self.attachedBottom.setCornerY(self.y + self.height, scene)
+            self.attachedBottom.setCornerY(self.y + self.height)
 
     def moove(self, posX: int, posY: int, scene):
-        self.setX(posX, scene)
-        self.setY(posY, scene)
+        self.setX(posX)
+        self.setY(posY)
         for b in scene.displayedBlocks:
 
             if self.shadowBlock and self.shadowBlock.attachedTop.id == b.id and not b.isNearAttachPoints(self):
                 # deletes shadow block
-                self.delete_Shadow(scene)
+                self.delete_Shadow()
 
             elif b.id != self.id and not self.shadowBlock and b.isNearAttachPoints(self):
-                print("MADE SHADOW")
-                self.place_Shadow(b, scene)
+                self.place_Shadow(b)
 
     def contains(self, x: int, y: int):
         return x > self.x and x < self.x + self.width \
@@ -175,15 +187,15 @@ class Block:
                     return True
         return False
 
-    def attach(self, block, scene):
+    def attach(self, block):
         """attaches a block under itself
 
         Args:
             b (Block): the block we attach
         """
         # Note: make it also work for other clip points
-        block.setCornerX(self.x, scene)
-        block.setCornerY(self.y + self.height, scene)
+        block.setCornerX(self.x)
+        block.setCornerY(self.y + self.height)
 
         if self.attachedBottom and self.attachedBottom.id != block.id:  # change here
             block_under1 = self.attachedBottom
@@ -195,29 +207,30 @@ class Block:
             block_under2 = block.attachedBottom
 
             # attach the previous block under to block
-            block_under1.setCornerX(block.x, scene)
-            block_under1.setCornerY(block.y + block.height, scene)
+            block_under1.setCornerX(block.x)
+            block_under1.setCornerY(block.y + block.height)
 
             block.attachedBottom = block_under1
             block_under1.attachedTop = block
 
             # continue attaching chain
             if block_under2:
-                block.attach(block_under2, scene)
+                block.attach(block_under2)
 
         else:
             self.attachedBottom = block
             block.attachedTop = self
 
-    def place_Shadow(self, block, scene):
+    def place_Shadow(self, block):
         """Places a shadow block at the clip position of the block
 
         Args:
             block (Block): the block the shadow is placed on
         """
         self.shadowBlock = Block(
-            self.x, self.y, self.width, self.height, "shadow")
-        block.attach(self.shadowBlock, scene)
+            self.x, self.y, self.width, self.height, "shadow", self.canvas)
+        block.attach(self.shadowBlock)
+        self.shadowBlock.visual_Update()
 
     def disatach(self, b):
         """disatach itself from the block under
@@ -228,18 +241,22 @@ class Block:
         b.attachedTop = None
         self.attachedBottom = None
 
-    def delete_Shadow(self, scene):
+    def delete_Shadow(self):
         """deletes shadow block, and reattach blocks that
         were separated by the shadow block
         """
         under_Block = self.shadowBlock.attachedBottom
         upper_Block = self.shadowBlock.attachedTop
 
+        # visually delete shadow block
+        for objID in self.shadowBlock.canvasObjectsID:
+            self.canvas.delete(objID)
+
         upper_Block.disatach(self.shadowBlock)
         self.shadowBlock = None
 
         if under_Block:
-            upper_Block.attach(under_Block, scene)
+            upper_Block.attach(under_Block)
 
     def __str__(self) -> str:
         if self.attachedTop:

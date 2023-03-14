@@ -1,11 +1,9 @@
 from tkinter import *
 from tkinter import messagebox
 from time import time
-from classes.CodingBlock import Block
 from classes.Keyboard_Handler import Keyboard
 from classes.Mouse_Handler import Mouse
 from classes.Scene import Scene
-from copy import copy
 
 
 def gameLoop():
@@ -60,17 +58,10 @@ def update():
         # pass trough every block to see which one sould be focused
         for b in gameScene.displayedBlocks:
             if b.contains(mouse.x, mouse.y):
+
                 # disatach block
                 if b.attachedTop:
                     b.attachedTop.disatach(b)
-
-                # put block on top
-                bChain = b
-                while bChain:
-                    # visually update block chain
-                    gameScene.update_Object(bChain, temporary=False)
-
-                    bChain = bChain.attachedBottom
 
                 # focus block
                 gameScene.focusedBlock = b
@@ -84,16 +75,10 @@ def update():
             b = gameScene.focusedBlock.shadowBlock.attachedTop
 
             # destroy shadow block
-            gameScene.focusedBlock.delete_Shadow(gameScene)
+            gameScene.focusedBlock.delete_Shadow()
 
             # clip focused block
-            b.attach(gameScene.focusedBlock, gameScene)
-
-        # update visually block chain one last time
-        bChain = gameScene.focusedBlock
-        while bChain:
-            gameScene.temporaryDisplayedObject.append(bChain.id)
-            bChain = bChain.attachedBottom
+            b.attach(gameScene.focusedBlock)
 
         # unfocus block
         gameScene.focusedBlock.isFocused = False
@@ -115,35 +100,12 @@ def update():
 
         elif b.isFocused:
             # unfocus button
-            b.unfocus_Handler(gameScene)
+            b.unfocus_Handler()
 
 
 def repaint():
     # delete objects
     canvas.delete("fps")
-    canvas.delete("temporary")
-    for objID in gameScene.objectsToDelete:
-        canvas.delete(objID)
-
-    # making clone of objects to display to prevent concurrent modification exception
-    objToDisplay = copy(gameScene.objectsToDisplay)
-
-    for obj in objToDisplay:
-        print(obj)
-        # delete objects that are repainted
-        for objID in obj.canvasObjectsID:
-            canvas.delete(objID)
-
-        # draw everything that has changed
-        obj.display(canvas)
-
-        # deletes item if he was only temporary
-        if obj.id in gameScene.temporaryDisplayedObject:
-            gameScene.stop_Display_Object(obj)
-
-    # reset deleted and temporary object list
-    gameScene.objectsToDelete.clear()
-    gameScene.temporaryDisplayedObject.clear()
 
     # display fps
     canvas.create_text(
@@ -190,7 +152,7 @@ if __name__ == "__main__":
     currentFPS = 0
 
     # initialise scene
-    gameScene = Scene("test")
+    gameScene = Scene("test", canvas)
 
     # game loop call
     gameLoop()
